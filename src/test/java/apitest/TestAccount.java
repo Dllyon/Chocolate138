@@ -6,7 +6,6 @@ import entities.AccountEntity;
 import io.restassured.response.Response;
 import org.testng.Assert;
 import org.testng.ITestContext;
-import org.testng.annotations.AfterSuite;
 import org.testng.annotations.Test;
 
 import static io.restassured.RestAssured.given;
@@ -33,23 +32,23 @@ public class TestAccount {
     public void testCreateUser(ITestContext context){
         // Arrange - Configura
 
-        account.userName = "charlie190"; // entrada e saida (resultado esperado)
-        account.password = "P@ss0rd1!1"; // entrada
-
+        account.userName = "charlie291"; // entrada e saida (resultado esperado)
+        account.password = "P@ss0rd1"; // entrada
         jsonBody = gson.toJson(account);  // Converte a entidade usuario no formato json
 
         // Act - Executa
 
         // Dado - Quando - Então
         // Given - When - Then
-        resposta = (Response) given()      // dado
+        resposta = (Response)
+        given()      // dado
                 .contentType(ct)    // tipo do conteudo
                 .log().all()                        // registre tudo na ida
                 .body(jsonBody)    // corpo da mensagem que será enviada
-                .when() // quando
+        .when() // quando
                 .post(uri + "User")
                 // Assert - Valida
-                .then() // então
+        .then() // então
                 .log().all()        // registre tudo na volta
                 .statusCode(201) // valide a comunicação
                 .body("username", is(account.userName)) // valida o usuario
@@ -65,7 +64,7 @@ public class TestAccount {
 
 
     } // fim do método de criação de usuário
-
+        //metodo de geração do token(cria token)
     @Test(priority = 2)
     public void testGenerateToken(ITestContext context){
         // Configura
@@ -73,13 +72,14 @@ public class TestAccount {
         // --> Resultado Esperado é que ele receba um token
 
         // Executa
-        resposta = (Response) given()
+        resposta = (Response)
+        given()
                 .contentType(ct)
                 .log().all()
                 .body(jsonBody)
-                .when()
+        .when()
                 .post(uri + "GenerateToken")
-                .then()
+        .then()
                 .log().all()
                 .statusCode(200) // valida a comunicação
                 .body("status", is("Success")) // Status = Sucesso
@@ -89,7 +89,7 @@ public class TestAccount {
 
         // Extração do Token
         token = resposta.jsonPath().getString("token");
-        context.setAttribute("token", resposta.jsonPath().getString("token"));
+        context.setAttribute("token", token);
         System.out.println("token: " + token);
 
         // Valida
@@ -101,7 +101,7 @@ public class TestAccount {
     public void testAuthorized(){
         // Configura
         // Dados de Entrada
-        // --> Fornecidos pele AccountEntity através do método testCreateUser - priority = 1
+        // --> Fornecidos pela AccountEntity através do método testCreateUser - priority = 1
 
         // Dados de Saída / Resultado Esperado
         // StatusCode = 200
@@ -112,10 +112,10 @@ public class TestAccount {
                 .contentType(ct)
                 .log().all()
                 .body(jsonBody)
-                .when()
+        .when()
                 .post(uri + "Authorized")
                 // Valida
-                .then()
+        .then()
                 .log().all()
                 .statusCode(200)
         // .body(true) // ToDo: como validar o retorno do body apenas como true
@@ -135,10 +135,10 @@ public class TestAccount {
         given()                                     // Dado // Comandos do REST-assured
                 .contentType(ct)                    // Formato da mensagem
                 .log().all()                        // Exibir tudo que acontece na ida
-                .when()                                     // Quando
+        .when()                                     // Quando
                 .get(uri + "User/" + userId)   // Consulta o usuário pelo userId
                 // Valida
-                .then()                                     // Então
+        .then()                                     // Então
                 .log().all()                        // Exibir tudo que acontece na volta
                 .statusCode(401)     // Valida se não está autorizado
                 .body("code", is("1200")) // Valida o código de mensagem "não autorizado"
@@ -159,10 +159,10 @@ public class TestAccount {
                 .contentType(ct)                    // Formato da mensagem
                 .log().all()                        // Exibir tudo que acontece na ida
                 .header("Authorization", "Bearer " + token)
-                .when()                                     // Quando
+        .when()                                     // Quando
                 .get(uri + "User/" + userId)   // Consulta o usuário pelo userId
                 // Valida
-                .then()                                     // Então
+        .then()                                     // Então
                 .log().all()                        // Exibir tudo que acontece na volta
                 .statusCode(200)     // Valida se a conexão teve sucesso
                 .body("userId", is(userId))
@@ -170,7 +170,7 @@ public class TestAccount {
         ;                                           // Conclui o bloco do REST-assured
     }
 
-    @AfterSuite
+    @Test(priority = 20)
     public void testDeleteUser(){
         // Configura
         // Dados de entrada vem do método de teste da criação do usuário (userId)

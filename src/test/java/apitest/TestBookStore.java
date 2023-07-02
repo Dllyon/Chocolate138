@@ -24,7 +24,8 @@ public class TestBookStore {
 
     @Test(priority = 1)
     public void testResearchBooks(ITestContext context) {
-        Response resp = (Response) given()
+        Response resp = (Response)
+                given()
                 .contentType(ct)
                 .log().all()
                 .header("Authorization", "Bearer " + context.getAttribute("token"))
