@@ -1,150 +1,103 @@
 package apitest;
 
-import com.google.gson.Gson;
-import entities.BookStoreEntity;
-import io.restassured.response.Response;
+import entities.LoanEntity;
+import org.testng.annotations.*;
 import org.testng.ITestContext;
-import org.testng.annotations.Test;
 
-import static org.hamcrest.Matchers.*;
-
+import static apitest.TestAccount.gson;
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.is;
 
 public class TestBookStore {
+    String uri = "https://bookstore.toolsqa.com/BookStore/v1/";
+    String ct = "application/json";
+    TestAccount account = new TestAccount();
+    LoanEntity isbn = new LoanEntity();
+    String token;
 
-    static String uri = "https://bookstore.toolsqa.com/BookStore/v1/";
-    static String ct = "application/json";
-
-    static String isbnGit;
-    static String isbnJS;
-    static String isbnASP;
-    static String isbnSpeakingJS;
-
-    Gson gson = new Gson();
+    @BeforeClass
+   // @BeforeMethod
+    public void setUp(ITestContext context) {
+        TestAccount.testCreateUser(context);
+        TestAccount.testGenerateToken(context);
+        token = context.getAttribute("token").toString();
+    }
+    @AfterClass //depois da classe
+    //@AfterMethod
+    public void tearDown() {
+        TestAccount.testDeleteUser();
+    }
 
     @Test(priority = 1)
     public void testResearchBooks(ITestContext context) {
-        Response resp = (Response)
-                given()
-                .contentType(ct)
+        given()
                 .log().all()
-                .header("Authorization", "Bearer " + context.getAttribute("token"))
+                .contentType(ct)
+                .header("Authorization", "Bearer " + token)
                 .when()
                 .get(uri + "Books")
                 .then()
                 .log().all()
-                .statusCode(200)
-                .extract();
-
-        isbnGit = resp.jsonPath().getString("books[0].isbn");
-        isbnJS = resp.jsonPath().getString("books[1].isbn");
-        isbnASP = resp.jsonPath().getString("books[2].isbn");
-        isbnSpeakingJS = resp.jsonPath().getString("books[3].isbn");
+                .statusCode(200);
     }
-
     @Test(priority = 2)
-    public void testResearchBook(ITestContext context) {
-        given()
-                .contentType(ct)
-                .log().all()
-                .header("Authorization", "Bearer " + context.getAttribute("token"))
-                .when()
-                .get(uri + "Book?ISBN=" + isbnGit)
-                .then()
-                .log().all()
-                .statusCode(200)
-                .body("isbn", is(isbnGit))
-                .body("title", is("Git Pocket Guide"))
-        ;
-    }
+    public void testLoanBooks(ITestContext context){ // Emprestar livros
+        // Configura
 
-    @Test(priority = 3)
-    public void testRegisterBooks(ITestContext context) {
-        BookStoreEntity book = new BookStoreEntity();
-
-        book.userId = (String) context.getAttribute("userId");
-
-        book.collectionOfIsbns = new BookStoreEntity.ISBN[]{
-                new BookStoreEntity.ISBN(isbnGit),
-                new BookStoreEntity.ISBN(isbnJS),
-                new BookStoreEntity.ISBN(isbnASP)
+        // userId virá pelo context
+        isbn.userId = context.getAttribute("userID").toString();//cód user
+        isbn.collectionOfIsbns = new LoanEntity.ISBN[]{
+                new LoanEntity.ISBN("9781449325862")
         };
+        // isbn.isbn = "9781449325862";//cod livro
 
-        String jsonBody = gson.toJson(book);
 
+
+        // Dados de saida
+        // statusCode = 201
+        // Retorne o isbn do livro emprestado (echo)
+
+        // Executa
         given()
-                .contentType(ct)
                 .log().all()
+                .contentType(ct)
                 .header("Authorization", "Bearer " + context.getAttribute("token"))
-                .body(jsonBody)
-                .when()
+                .body(gson.toJson(isbn))
+        .when()
                 .post(uri + "Books")
-                .then()
+        // Valida
+        .then()
                 .log().all()
                 .statusCode(201)
-                .body("books[0].isbn", is(isbnGit))
-                .body("books[1].isbn", is(isbnJS))
-                .body("books[2].isbn", is(isbnASP))
+                .body("isbn", is(isbn.isbn))
         ;
     }
+    @Test(priority = 3)
+    public void testUpdateLoan(ITestContext context){ //Atualizar com quem está qual livro
+        //Configura
+        // Dados de entrada
+        // userID é extraidop no BeforeMethod
+        String isbnAntigo = "9781449325862"; // Livro a substituir
+        String isbnNovo = "9781449331818";// novo livro a ser emprestado
 
-    @Test(priority = 4)
-    public void testDeleteBook(ITestContext context) {
-        BookStoreEntity book = new BookStoreEntity();
-        book.userId = (String) context.getAttribute("userId");
-        book.isbn = isbnASP;
+        // alimentar a classe LoanEntity apenas com o código do user e o isbn
+        isbn = new LoanEntity();// reiniciando o objeto da classe LoanEntity
+        isbn.userId = context.getAttribute("userID").toString();//cód do user
+        isbn.isbn = isbnNovo;//cód do livro que estava com o user
 
-        String jsonBody = gson.toJson(book);
-
+        //Executa
         given()
+                .log().all()
                 .contentType(ct)
-                .log().all()
                 .header("Authorization", "Bearer " + context.getAttribute("token"))
-                .body(jsonBody)
-                .when()
-                .delete(uri + "Book")
-                .then()
-                .log().all()
-                .statusCode(204)
-        ;
-    }
-
-    @Test(priority = 5)
-    public void testModifyBook(ITestContext context) {
-        BookStoreEntity book = new BookStoreEntity();
-        book.userId = (String) context.getAttribute("userId");
-        book.isbn = isbnSpeakingJS;
-
-        String jsonBody = gson.toJson(book);
-
-        given()
-                .contentType(ct)
-                .log().all()
-                .header("Authorization", "Bearer " + context.getAttribute("token"))
-                .body(jsonBody)
-                .when()
-                .put(uri + "Books/" + isbnJS)
-                .then()
+                .body(gson.toJson(isbn))
+        .when()
+                .put(uri + "Books/" + isbnAntigo)
+        //valida
+        .then()
                 .log().all()
                 .statusCode(200)
-                .body("userId", is(context.getAttribute("userId")))
-                .body("username", is(context.getAttribute("username")))
+                .body("books[0].isbn", is(isbnNovo))
         ;
     }
-
-    @Test(priority = 6)
-    public void testDeleteBooks(ITestContext context) {
-
-        given()
-                .contentType(ct)
-                .log().all()
-                .header("Authorization", "Bearer " + context.getAttribute("token"))
-                .when()
-                .delete(uri + "Books?UserId=" + context.getAttribute("userId"))
-                .then()
-                .log().all()
-                .statusCode(204)
-        ;
-    }
-
 }

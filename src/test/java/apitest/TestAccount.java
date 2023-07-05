@@ -23,8 +23,8 @@ public class TestAccount {
 
     // Método para criar usuário
     @Test(priority = 1)
-    public static void testCreateUser() {
-        account.userName = "charlie503";
+    public static void testCreateUser(ITestContext context) {
+        account.userName = "charlie506";
         account.password = "P@ss0rd1";
         jsonBody = gson.toJson(account);
 
@@ -41,6 +41,7 @@ public class TestAccount {
                 .extract();
 
         userId = resposta.jsonPath().getString("userID");
+        context.setAttribute("userID", userId);
         System.out.println("UserID extraido: " + userId);
     }
 
@@ -65,6 +66,9 @@ public class TestAccount {
         System.out.println("Token: " + token);
 
         Assert.assertTrue(token.length() != 0);
+    }
+
+    public static void testCreateUser() {
     }
 
     @Test(priority = 3)
