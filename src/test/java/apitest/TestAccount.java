@@ -24,7 +24,7 @@ public class TestAccount {
     // Método para criar usuário
     @Test(priority = 1)
     public static void testCreateUser(ITestContext context) {
-        account.userName = "charlie506";
+        account.userName = "charlie507";
         account.password = "P@ss0rd1";
         jsonBody = gson.toJson(account);
 

@@ -24,7 +24,8 @@ public class TestBookStore {
     }
     @AfterClass //depois da classe
     //@AfterMethod
-    public void tearDown() {
+    public void tearDown()
+    {
         TestAccount.testDeleteUser();
     }
 
@@ -100,4 +101,25 @@ public class TestBookStore {
                 .body("books[0].isbn", is(isbnNovo))
         ;
     }
+    @Test(priority = 4)
+    public void testDeleteLoans(ITestContext context){
+        //Configura
+        // Dados de entrada
+        // userID é extraido no BeforeClass
+        //statusCode = 204
+
+        //Executa
+        given()
+                .log().all()
+                .contentType(ct)
+                .header("Authorization", "Bearer " + context.getAttribute("token"))
+        .when()
+                .delete(uri + "Books?UserId=" + context.getAttribute("userID"))
+        //valida
+        .then()
+                .log().all()
+                .statusCode(204)
+        ;
+    }
+
 }
